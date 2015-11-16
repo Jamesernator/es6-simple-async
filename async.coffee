@@ -2,7 +2,7 @@
     2015
 ###
 "use strict"
-module.exports = async = (gen_func) -> wrapper = (args...) ->
+async = (gen_func) -> wrapper = (args...) ->
     # This wrapper returns a promise for the async function
     return new Promise (resolve, reject) -> # Create a promise for this event
         gen = gen_func(args...)
@@ -72,3 +72,8 @@ async.from = (iterable) ->
     ### Creates a async function from an existing iterable ###
     gen_func = -> yield from iterable
     return async(gen_func)
+
+if module?
+    module.exports = async
+else
+    @async = async
