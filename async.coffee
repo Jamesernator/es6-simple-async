@@ -1,3 +1,6 @@
+### Author James "The Jamesernator" Browning
+    2015
+###
 "use strict"
 module.exports = async = (gen_func) -> wrapper = (args...) ->
     # This wrapper returns a promise for the async function
