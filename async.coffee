@@ -47,15 +47,23 @@ module.exports = async = (gen_func) -> wrapper = (args...) ->
                         reject(total_failure)
         iter.next() # Start our iterator
 
-async.main = (func) ->
-    ### This is for calling a main function
-        and displaying any error on failure
+async.run = (func, err_callback=console.log) ->
+    ### This tries running the async function given and if it
+        fails it calls the err_callback with the error given
+        by the async function
     ###
     do async ->
         try
             yield async(func)()
         catch err
-            console.log err.stack
+            err_callback(err)
+
+async.main = (func) ->
+    ### Although async.run has err_callback as console.log we'll just print
+        the stack
+    ###
+    async.run func, (err) ->
+        console.log err.stack
 
 async.from = (iterable) ->
     ### Creates a async function from an existing iterable ###
