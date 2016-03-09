@@ -73,6 +73,8 @@ async.from = (iterable) ->
     gen_func = -> yield from iterable
     return async(gen_func)
 
+async.do = async.run
+
 if module?
     module.exports = async
 else

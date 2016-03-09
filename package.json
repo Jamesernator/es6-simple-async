@@ -1,0 +1,21 @@
+{
+  "name": "es6-simple-async",
+  "main": "./async.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jamesernator/es6-simple-async"
+  },
+  "version": "0.9.9",
+  "author": "James \"The Jamesernator\" Browning",
+  "description": "This is a simple async wrapper for generators",
+  "devDependencies": {
+    "coffee-script": "latest",
+    "pre-commit": "latest"
+  },
+  "scripts": {
+    "build": "coffee -o . -c async.coffee"
+  },
+  "pre-commit": {
+    "run": "build"
+  }
+}
