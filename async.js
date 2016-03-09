@@ -96,6 +96,8 @@
     return async(gen_func);
   };
 
+  async["do"] = async.run;
+
   if (typeof module !== "undefined" && module !== null) {
     module.exports = async;
   } else {
