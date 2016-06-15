@@ -1,11 +1,11 @@
 ### Author James "The Jamesernator" Browning
-    2015
+    2016
 ###
 "use strict"
 async = (gen_func) -> wrapper = (args...) ->
     # This wrapper returns a promise for the async function
-    return new Promise (resolve, reject) -> # Create a promise for this event
-        gen = gen_func(args...)
+    return new Promise (resolve, reject) => # Create a promise for this event
+        gen = gen_func.apply(this, args...)
         iter = do -> # Create a new iterator which will be resumed whenever
                      # the currently active promise is resolved/rejected
             result = undefined # Start the generator with undefined
