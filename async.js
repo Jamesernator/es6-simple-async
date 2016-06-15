@@ -9,47 +9,51 @@
   var async,
     slice = [].slice;
 
-  async = function(gen_func) {
-    var wrapper;
-    return wrapper = function() {
+  async = function(genFunc) {
+    var asyncFunc;
+    return asyncFunc = function() {
       var args;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       return new Promise((function(_this) {
         return function(resolve, reject) {
           var gen, iter;
-          gen = gen_func.apply.apply(gen_func, [_this].concat(slice.call(args)));
+          gen = genFunc.apply.apply(genFunc, [_this].concat(slice.call(args)));
           iter = (function*() {
-            var done, err, error, error1, error2, promise, ref, result, total_failure, value;
+            var awaiting, done, err, error, error1, isError, ref, ref1, ref2, result, value;
             result = void 0;
+            isError = false;
             while (true) {
-              try {
-                ref = gen.next(result), value = ref.value, done = ref.done;
-              } catch (error) {
-                err = error;
-                reject(err);
+              if (!isError) {
+                try {
+                  ref = gen.next(result), value = ref.value, done = ref.done;
+                } catch (error) {
+                  err = error;
+                  reject(err);
+                }
+              } else {
+                try {
+                  ref1 = gen["throw"](result), value = ref1.value, done = ref1.done;
+                } catch (error1) {
+                  err = error1;
+                  reject(err);
+                }
               }
               if (done) {
                 resolve(value);
                 return;
               }
-              promise = Promise.resolve(value);
-              try {
-                result = (yield promise.then(iter.next.bind(iter))["catch"](function(err) {
-                  if (err.constructor !== Error) {
-                    return iter["throw"](new Error(err));
-                  } else {
-                    return iter["throw"](err);
-                  }
-                }));
-              } catch (error1) {
-                err = error1;
-                try {
-                  gen["throw"](err);
-                } catch (error2) {
-                  total_failure = error2;
-                  reject(total_failure);
-                }
-              }
+              awaiting = Promise.resolve(value);
+              ref2 = (yield awaiting.then(function(_result) {
+                return iter.next({
+                  result: _result,
+                  isError: false
+                });
+              })["catch"](function(err) {
+                return iter.next({
+                  result: err,
+                  isError: true
+                });
+              })), result = ref2.result, isError = ref2.isError;
             }
           })();
           return iter.next();
@@ -58,52 +62,10 @@
     };
   };
 
-  async.run = function(func, err_callback) {
-    if (err_callback == null) {
-      err_callback = console.log;
-    }
-
-    /* This tries running the async function given and if it
-        fails it calls the err_callback with the error given
-        by the async function
-     */
-    return async(function*() {
-      var err, error;
-      try {
-        return (yield async(func)());
-      } catch (error) {
-        err = error;
-        return err_callback(err);
-      }
-    })();
-  };
-
-  async.main = function(func) {
-
-    /* Although async.run has err_callback as console.log we'll just print
-        the stack
-     */
-    return async.run(func, function(err) {
-      return console.log(err.stack);
-    });
-  };
-
-  async.from = function(iterable) {
-
-    /* Creates a async function from an existing iterable */
-    var gen_func;
-    gen_func = function*() {
-      return (yield* iterable);
-    };
-    return async(gen_func);
-  };
-
-  async["do"] = async.run;
-
   if (typeof module !== "undefined" && module !== null) {
     module.exports = async;
   } else {
-    this.async = async;
+    window.async = async;
   }
 
 }).call(this);

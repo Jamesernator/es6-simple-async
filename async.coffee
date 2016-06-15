@@ -2,80 +2,62 @@
     2016
 ###
 "use strict"
-async = (gen_func) -> wrapper = (args...) ->
-    # This wrapper returns a promise for the async function
-    return new Promise (resolve, reject) => # Create a promise for this event
-        gen = gen_func.apply(this, args...)
-        iter = do -> # Create a new iterator which will be resumed whenever
-                     # the currently active promise is resolved/rejected
-            result = undefined # Start the generator with undefined
+async = (genFunc) -> asyncFunc = (args...) ->
+    # This asyncFunc is simply a wrapper such that the function is not
+    # immediately invoked
+    return new Promise (resolve, reject) =>
+        # Initialize gen with the correct scope of this and pass in the
+        # arguments given
+        gen = genFunc.apply(this, args...)
+        iter = do ->
+            # Create an iterator that acts as the reentry point for the
+            # awaited (yielded) promises
+            result = undefined
+            isError = false
             loop
-                try
-                    # Attempt to get the next value
-                    {value, done} = gen.next(result)
-                catch err
-                    # If an error happens we'll reject with that err
-                    reject(err)
-                if done
-                    # If we're done then we can resolve our promise and exit
-                    # with the finish value
-                    resolve(value)
-                    return # Exit completely
-
-                # Whether the value is a promise or not we'll turn it into one
-                # if it already was a promise this returns the same promise
-                promise = Promise.resolve(value)
-                try
-                    # So try yielding and waiting for the promise to complete
-                    # resuming here when its done
-                    result = yield promise.then(iter.next.bind(iter))
-                    .catch (err) ->
-                        if err.constructor isnt Error
-                            iter.throw(new Error(err))
-                        else
-                            iter.throw(err)
-
-                    # If all went well the value of result will be passed
-                    # back into the generator
-                catch err
-                    # If something bad happened we'll throw it to the generator
-                    # to handle
+                # Repeatedly get values from the generator
+                unless isError
+                    # If the result of the previous promise was a value
+                    # send it into the generator
                     try
-                        # If this throws an error then error wasn't handled
-                        # in our generator
-                        gen.throw(err)
-                    catch total_failure
-                        # So we'll reject and call the entire async function
-                        # as failed
-                        reject(total_failure)
-        iter.next() # Start our iterator
+                        {value, done} = gen.next(result)
+                    catch err
+                        # But if there's an error from passing it to the
+                        # generator then the generator raised an error
+                        # so reject with the err given
+                        reject(err)
+                else
+                    # If the result of the promise was an error however
+                    # then throw it into the generator
+                    try
+                        {value, done} = gen.throw(result)
+                    catch err
+                        # But if the generator throws an error back then the
+                        # generator either didn't handle the error
+                        # or threw a new error so reject with that error
+                        reject(err)
 
-async.run = (func, err_callback=console.log) ->
-    ### This tries running the async function given and if it
-        fails it calls the err_callback with the error given
-        by the async function
-    ###
-    do async ->
-        try
-            yield async(func)()
-        catch err
-            err_callback(err)
+                if done
+                    # If we managed to get to the done value of the generator
+                    # then this is by definition the return value so we
+                    # should resolve our promise for our asynchronous
+                    # function with the value
+                    resolve(value)
+                    return
 
-async.main = (func) ->
-    ### Although async.run has err_callback as console.log we'll just print
-        the stack
-    ###
-    async.run func, (err) ->
-        console.log err.stack
-
-async.from = (iterable) ->
-    ### Creates a async function from an existing iterable ###
-    gen_func = -> yield from iterable
-    return async(gen_func)
-
-async.do = async.run
+                # If we're not done then we'll convert what value we were given
+                # into a promise (as per the async-await specification)
+                awaiting = Promise.resolve(value)
+                # We'll then suspend OUR OWN iterator on promise
+                # and set the values for the next loop around appropriately
+                {result, isError} = yield awaiting.then (_result) ->
+                    iter.next({result: _result, isError: false})
+                .catch (err) ->
+                    iter.next({result: err, isError: true})
+        # Start our own iterator to begin running the async function
+        iter.next()
 
 if module?
     module.exports = async
 else
-    @async = async
+    window.async = async
