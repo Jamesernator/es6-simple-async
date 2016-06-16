@@ -17,7 +17,7 @@
       return new Promise((function(_this) {
         return function(resolve, reject) {
           var gen, iter;
-          gen = genFunc.apply.apply(genFunc, [_this].concat(slice.call(args)));
+          gen = genFunc.apply(_this, args);
           iter = (function*() {
             var awaiting, done, err, error, error1, isError, ref, ref1, ref2, result, value;
             result = void 0;

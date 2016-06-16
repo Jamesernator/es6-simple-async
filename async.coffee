@@ -8,7 +8,7 @@ async = (genFunc) -> asyncFunc = (args...) ->
     return new Promise (resolve, reject) =>
         # Initialize gen with the correct scope of this and pass in the
         # arguments given
-        gen = genFunc.apply(this, args...)
+        gen = genFunc.apply(this, args)
         iter = do ->
             # Create an iterator that acts as the reentry point for the
             # awaited (yielded) promises
