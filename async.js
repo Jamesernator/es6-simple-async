@@ -62,6 +62,52 @@
     };
   };
 
+  async.run = function(func, errCallback) {
+    if (errCallback == null) {
+      errCallback = console.log;
+    }
+
+    /* This tries running the async function given and if it
+        fails it calls the errCallback with the error given
+        by the async function
+     */
+    return async(function*() {
+      var err, error;
+      try {
+        return (yield async(func)());
+      } catch (error) {
+        err = error;
+        return errCallback(err);
+      }
+    })();
+  };
+
+  async.main = function(func) {
+
+    /* Although async.run has errCallback as console.log we'll just print
+        the stack
+     */
+    return async.run(func, function(err) {
+      return console.log(err.stack);
+    });
+  };
+
+  async.from = function(iterable) {
+
+    /* Creates a async function from an existing iterable */
+    var genFunc;
+    genFunc = function*() {
+      return (yield* iterable);
+    };
+    return async(genFunc);
+  };
+
+  async["do"] = async.run;
+
+  Object.defineProperty(async, "name", {
+    value: "async"
+  });
+
   if (typeof module !== "undefined" && module !== null) {
     module.exports = async;
   } else {

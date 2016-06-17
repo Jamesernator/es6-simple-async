@@ -57,6 +57,33 @@ async = (genFunc) -> asyncFunc = (args...) ->
         # Start our own iterator to begin running the async function
         iter.next()
 
+async.run = (func, errCallback=console.log) ->
+    ### This tries running the async function given and if it
+        fails it calls the errCallback with the error given
+        by the async function
+    ###
+    do async ->
+        try
+            yield async(func)()
+        catch err
+            errCallback(err)
+
+async.main = (func) ->
+    ### Although async.run has errCallback as console.log we'll just print
+        the stack
+    ###
+    async.run func, (err) ->
+        console.log err.stack
+
+async.from = (iterable) ->
+    ### Creates a async function from an existing iterable ###
+    genFunc = -> yield from iterable
+    return async(genFunc)
+
+async.do = async.run
+
+Object.defineProperty(async, "name", value: "async")
+
 if module?
     module.exports = async
 else
