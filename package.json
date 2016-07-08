@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/Jamesernator/es6-simple-async"
   },
-  "version": "0.9.9",
+  "version": "1.0.0",
   "author": "James \"The Jamesernator\" Browning",
   "description": "This is a simple async wrapper for generators",
   "devDependencies": {
