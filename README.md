@@ -1,3 +1,9 @@
+# Install
+
+Using NPM:
+
+`npm install es6-simple-async`
+
 # Async
 
 This is a basic wrapper around generators to create async functions:
