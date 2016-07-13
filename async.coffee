@@ -5,6 +5,9 @@
 async = (genFunc) -> asyncFunc = (args...) ->
     # This asyncFunc is simply a wrapper such that the function is not
     # immediately invoked
+    GeneratorFunction = Object.getPrototypeOf(-> yield return).constructor
+    unless genFunc instanceof GeneratorFunction
+        throw new Error("Passed a non-generator to async")
     return new Promise (resolve, reject) =>
         # Initialize gen with the correct scope of this and pass in the
         # arguments given
