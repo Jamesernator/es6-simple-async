@@ -10,16 +10,18 @@
     slice = [].slice;
 
   async = function(genFunc) {
-    var asyncFunc;
+
+    /* async converts a GeneratorFunction into a ES7 async function */
+    var GeneratorFunction, asyncFunc;
+    GeneratorFunction = Object.getPrototypeOf(function*() {
+      return;
+    }).constructor;
+    if (!(genFunc instanceof GeneratorFunction)) {
+      throw new Error("Passed non-generator to async");
+    }
     return asyncFunc = function() {
-      var GeneratorFunction, args;
+      var args;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-      GeneratorFunction = Object.getPrototypeOf(function*() {
-        return;
-      }).constructor;
-      if (!(genFunc instanceof GeneratorFunction)) {
-        throw new Error("Passed a non-generator to async");
-      }
       return new Promise((function(_this) {
         return function(resolve, reject) {
           var gen, iter;
