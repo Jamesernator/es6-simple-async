@@ -6,65 +6,54 @@
 
 (function() {
   "use strict";
-  var async,
+  var GeneratorFunction, async,
     slice = [].slice;
+
+  GeneratorFunction = Object.getPrototypeOf(function*() {
+    return;
+  }).constructor;
 
   async = function(genFunc) {
 
     /* async converts a GeneratorFunction into a ES7 async function */
-    var GeneratorFunction, asyncFunc;
-    GeneratorFunction = Object.getPrototypeOf(function*() {
-      return;
-    }).constructor;
+    var spawn;
     if (!(genFunc instanceof GeneratorFunction)) {
       throw new Error("Passed non-generator to async");
     }
-    return asyncFunc = function() {
+    return spawn = function() {
       var args;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       return new Promise((function(_this) {
         return function(resolve, reject) {
-          var gen, iter;
+          var gen, step;
           gen = genFunc.apply(_this, args);
-          iter = (function*() {
-            var awaiting, done, err, error, error1, isError, ref, ref1, ref2, result, value;
-            result = void 0;
-            isError = false;
-            while (true) {
-              if (!isError) {
-                try {
-                  ref = gen.next(result), value = ref.value, done = ref.done;
-                } catch (error) {
-                  err = error;
-                  reject(err);
-                }
-              } else {
-                try {
-                  ref1 = gen["throw"](result), value = ref1.value, done = ref1.done;
-                } catch (error1) {
-                  err = error1;
-                  reject(err);
-                }
-              }
-              if (done) {
-                resolve(value);
-                return;
-              }
-              awaiting = Promise.resolve(value);
-              ref2 = (yield awaiting.then(function(_result) {
-                return iter.next({
-                  result: _result,
-                  isError: false
-                });
-              })["catch"](function(err) {
-                return iter.next({
-                  result: err,
-                  isError: true
-                });
-              })), result = ref2.result, isError = ref2.isError;
+          step = function(nextFunc) {
+            var err, error, next;
+            try {
+              next = nextFunc();
+            } catch (error) {
+              err = error;
+              console.log(err);
+              reject(err);
+              return;
             }
-          })();
-          return iter.next();
+            if (next.done) {
+              resolve(next.value);
+              return;
+            }
+            return Promise.resolve(next.value).then(function(val) {
+              return step(function() {
+                return gen.next(val);
+              });
+            }, function(err) {
+              return step(function() {
+                return gen["throw"](err);
+              });
+            });
+          };
+          return step(function() {
+            return gen.next(void 0);
+          });
         };
       })(this));
     };
