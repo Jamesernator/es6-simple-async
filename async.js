@@ -33,7 +33,6 @@
               next = nextFunc();
             } catch (error) {
               err = error;
-              console.log(err);
               reject(err);
               return;
             }

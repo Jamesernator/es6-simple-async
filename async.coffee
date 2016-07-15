@@ -27,7 +27,6 @@ async = (genFunc) ->
                 catch err
                     # If it threw an error then we're done so reject with
                     # that error
-                    console.log(err)
                     reject(err)
                     return
                 if next.done
